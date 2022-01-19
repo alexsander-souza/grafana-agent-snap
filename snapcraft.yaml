@@ -1,0 +1,69 @@
+# Copyright 2022 Canonical Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: grafana-agent
+version: 0.22.0
+base: core20
+grade: stable
+summary: Grafana Agent telemetry collector
+description: |
+  Grafana Agent is an telemetry collector for sending metrics, logs, and 
+  trace data to the opinionated Grafana observability stack. 
+confinement: strict
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: ppc64el
+  - build-on: s390x
+
+apps:
+  agent:
+    command: 'bin/grafana-agent.wrapper'
+    plugs:
+      - network-bind
+      - network
+      - network-observe
+      - log-observe
+      - system-observe
+    daemon: simple
+
+parts:
+  agent:
+    plugin: go
+    go-channel: 1.17/stable
+    source: https://github.com/grafana/agent.git
+    source-tag: v${SNAPCRAFT_PROJECT_VERSION}
+    source-depth: 1
+    build-packages:
+      - build-essential
+      - curl
+      - make
+      - wget
+    build-environment:
+      - BUILD_IN_CONTAINER: "false"
+      - RELEASE_BUILD: "true"
+    override-build: |
+        set -x
+        make protos agent agentctl
+        mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+        cp -p $SNAPCRAFT_PART_BUILD/cmd/agent/agent \
+              $SNAPCRAFT_PART_BUILD/cmd/agentctl/agentctl \
+          $SNAPCRAFT_PART_INSTALL/bin
+  snap-wrappers:
+    plugin: dump
+    source: .
+    prime:
+      - bin/grafana-agent.wrapper
+      - bin/common
+      - etc/agent/agent.yaml

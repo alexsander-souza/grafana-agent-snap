@@ -1,0 +1,29 @@
+#!/bin/bash -e
+#
+# Connect interfaces for the snap.
+#
+# This is needed for local installs (`snap try` or ` snap install --dangerous`)
+# where autoconnect is not performed.
+
+set -o pipefail
+
+is_installed() {
+    snap connections "$1" >/dev/null 2>&1
+}
+
+if ! is_installed grafana-agent; then
+    echo "The grafana-agent snap is not installed" >&2
+    exit 1
+fi
+
+snap connections grafana-agent | \
+    awk '$1 != "content" && $3 == "-" {print $2}' | \
+    xargs -r -n1 sudo snap connect
+
+# connect content interfaces too
+if is_installed maas; then
+    sudo snap connect grafana-agent:maas maas:maas-logs
+fi
+
+# print out the list of connections
+sudo snap connections grafana-agent

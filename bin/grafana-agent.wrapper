@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright 2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/sh
-
 # agent.wrapper -- A simple wrapper for Grafana Agent.
 #
 # This is meant to be used as an entrypoint for Grafana Agent inside a snap.
 
-. "$(dirname "$0")/common"
+source "$(dirname "$0")/common"
 
-[ -d "$SNAP_COMMON"/agent/ ] || mkdir -p "$SNAP_COMMON"/agent/
+[ -f "$SNAP_COMMON"/env ] && source "$SNAP_COMMON"/env
+
 [ -f "$AGENT_CONFIG" ] || cp "$SNAP"/etc/agent/agent.yaml "$AGENT_CONFIG"
 [ -d "$AGENT_WAL_DIR" ] || mkdir -p "$AGENT_WAL_DIR"
+[ -d "$AGENT_POS_DIR" ] || mkdir -p "$AGENT_POS_DIR"
 
 exec "$SNAP"/bin/agent \
     -config.file="$AGENT_CONFIG" \
-    -config.expand-env \
-    -prometheus.wal-directory="$AGENT_WAL_DIR"
+    -config.expand-env

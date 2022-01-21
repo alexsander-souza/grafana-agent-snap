@@ -17,9 +17,9 @@
 #
 # This is meant to be used as an entrypoint for Grafana Agent inside a snap.
 
-source "$(dirname "$0")/common"
+. "$(dirname "$0")/common"
 
-[ -f "$SNAP_COMMON"/env ] && source "$SNAP_COMMON"/env
+[ -f "$SNAP_COMMON"/env ] && . "$SNAP_COMMON"/env
 
 [ -f "$AGENT_CONFIG" ] || cp "$SNAP"/etc/agent/agent.yaml "$AGENT_CONFIG"
 [ -d "$AGENT_WAL_DIR" ] || mkdir -p "$AGENT_WAL_DIR"
